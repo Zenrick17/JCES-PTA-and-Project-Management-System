@@ -5,11 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::saved(function (self $user) {
+            $user->syncParentProfile();
+        });
+    }
 
     /**
      * The primary key associated with the table.
@@ -286,5 +294,36 @@ class User extends Authenticatable
     public function sessions()
     {
         return $this->hasMany(UserSession::class, 'userID', 'userID');
+    }
+
+    public function syncParentProfile(): void
+    {
+        if ($this->user_type !== 'parent' || !Schema::hasTable('parents')) {
+            return;
+        }
+
+        $parentProfile = ParentProfile::query()
+            ->where('userID', $this->userID)
+            ->orWhere('email', $this->email)
+            ->first();
+
+        $profileData = [
+            'userID' => $this->userID,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'email' => $this->email,
+            'phone' => $this->phone ?: '0000000000',
+            'password_hash' => $this->password_hash,
+            'account_status' => $this->is_active ? 'active' : 'inactive',
+        ];
+
+        if ($parentProfile) {
+            $parentProfile->fill($profileData);
+            $parentProfile->save();
+
+            return;
+        }
+
+        ParentProfile::create($profileData);
     }
 }

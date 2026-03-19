@@ -131,7 +131,7 @@
         <h3 class="text-base font-bold text-gray-900 mb-4">About US</h3>
         <div class="flex flex-col md:flex-row gap-6">
             <div class="flex-shrink-0">
-                <img src="http://127.0.0.1:8000/images/logos/jces-logo.png"
+                <img src="{{ asset('images/logos/jces-logo.png') }}"
                      alt="School Photo"
                      class="rounded-lg w-full md:w-52 h-28 object-cover">
             </div>

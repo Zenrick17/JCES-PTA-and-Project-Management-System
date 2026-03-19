@@ -104,17 +104,36 @@ class PrincipalController extends Controller
             $counter++;
         }
 
-        $user = User::create([
-            'username' => $username,
-            'password_hash' => Hash::make($request->password),
-            'plain_password' => $request->password,
-            'user_type' => $request->role,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'is_active' => true,
-        ]);
+        $user = DB::transaction(function () use ($request, $username) {
+            $user = User::create([
+                'username' => $username,
+                'password_hash' => Hash::make($request->password),
+                'plain_password' => $request->password,
+                'user_type' => $request->role,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'is_active' => true,
+            ]);
+
+            if ($user->user_type === 'parent') {
+                ParentProfile::updateOrCreate(
+                    ['email' => $user->email],
+                    [
+                        'userID' => $user->userID,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'password_hash' => $user->password_hash,
+                        'account_status' => 'active',
+                    ]
+                );
+            }
+
+            return $user;
+        });
 
         // Log the account creation activity
         SecurityAuditLog::logActivity(
@@ -334,17 +353,36 @@ class PrincipalController extends Controller
             $counter++;
         }
 
-        $user = User::create([
-            'username' => $username,
-            'password_hash' => Hash::make($request->password),
-            'plain_password' => $request->password,
-            'user_type' => $request->role,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'is_active' => true,
-        ]);
+        $user = DB::transaction(function () use ($request, $username) {
+            $user = User::create([
+                'username' => $username,
+                'password_hash' => Hash::make($request->password),
+                'plain_password' => $request->password,
+                'user_type' => $request->role,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'is_active' => true,
+            ]);
+
+            if ($user->user_type === 'parent') {
+                ParentProfile::updateOrCreate(
+                    ['email' => $user->email],
+                    [
+                        'userID' => $user->userID,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'password_hash' => $user->password_hash,
+                        'account_status' => 'active',
+                    ]
+                );
+            }
+
+            return $user;
+        });
 
         // Log the account creation activity
         SecurityAuditLog::logActivity(

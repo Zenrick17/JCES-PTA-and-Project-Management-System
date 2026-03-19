@@ -25,7 +25,7 @@
             <!-- Logo and School Name -->
             <div class="p-6 bg-white border-r border-gray-200 sidebar-padding">
                 <div class="flex items-center gap-3 sidebar-logo">
-                    <img src="http://127.0.0.1:8000/images/logos/jces-logo.png"
+                    <img src="{{ asset('images/logos/jces-logo.png') }}"
                          alt="JCES Logo"
                          class="w-12 h-12 object-contain">
                     <div class="sidebar-label" x-cloak>

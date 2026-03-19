@@ -273,9 +273,9 @@
                                         $receiptImageExists = false;
                                         $receiptImagePath = '';
                                         foreach(['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                                            if(file_exists(public_path('images/receipt_img/' . $contribution->contributionID . '.' . $ext))) {
+                                            if(\Illuminate\Support\Facades\Storage::disk('public')->exists('receipt_img/' . $contribution->contributionID . '.' . $ext)) {
                                                 $receiptImageExists = true;
-                                                $receiptImagePath = asset('images/receipt_img/' . $contribution->contributionID . '.' . $ext) . '?t=' . time();
+                                                $receiptImagePath = \Illuminate\Support\Facades\Storage::url('receipt_img/' . $contribution->contributionID . '.' . $ext) . '?t=' . time();
                                                 break;
                                             }
                                         }

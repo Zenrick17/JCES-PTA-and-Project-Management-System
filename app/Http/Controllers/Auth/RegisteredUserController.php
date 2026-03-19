@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ParentProfile;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
@@ -51,18 +53,35 @@ class RegisteredUserController extends Controller
             $counter++;
         }
 
-        $user = User::create([
-            'username' => $username,
-            'email' => $request->email,
-            'password_hash' => Hash::make($request->password),
-            'plain_password' => $request->password,
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'user_type' => 'parent', // Default user type for registration
-            'is_active' => true,
-            'created_date' => now(),
-            'password_changed_date' => now(),
-        ]);
+        $user = DB::transaction(function () use ($request, $username, $firstName, $lastName) {
+            $user = User::create([
+                'username' => $username,
+                'email' => $request->email,
+                'password_hash' => Hash::make($request->password),
+                'plain_password' => $request->password,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'user_type' => 'parent',
+                'is_active' => true,
+                'created_date' => now(),
+                'password_changed_date' => now(),
+            ]);
+
+            ParentProfile::updateOrCreate(
+                ['email' => $user->email],
+                [
+                    'userID' => $user->userID,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'phone' => $user->phone ?: '0000000000',
+                    'password_hash' => $user->password_hash,
+                    'account_status' => 'active',
+                ]
+            );
+
+            return $user;
+        });
 
         event(new Registered($user));
 

@@ -21,6 +21,7 @@ class PasswordController extends Controller
 
         $request->user()->forceFill([
             'password' => $validated['password'],
+            'plain_password' => $validated['password'],
         ])->save();
 
         return back()->with('status', 'password-updated');

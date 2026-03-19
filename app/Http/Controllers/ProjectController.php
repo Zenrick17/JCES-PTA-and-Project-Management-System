@@ -8,6 +8,7 @@ use App\Models\ProjectContribution;
 use App\Models\ProjectUpdate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
@@ -130,8 +131,8 @@ class ProjectController extends Controller
         $photoPath = null;
         if ($request->hasFile('project_photo')) {
             $filename = 'project_' . now()->format('Ymd_His') . '_' . uniqid() . '.' . $request->file('project_photo')->getClientOriginalExtension();
-            $request->file('project_photo')->move(public_path('images/projects'), $filename);
-            $photoPath = '/images/projects/' . $filename;
+            $storedPath = $request->file('project_photo')->storeAs('projects', $filename, 'public');
+            $photoPath = Storage::url($storedPath);
         }
 
         $description = $validated['description'] ?? null;

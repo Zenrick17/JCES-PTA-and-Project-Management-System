@@ -365,7 +365,7 @@ class ParentContributionController extends Controller
                 $contributions[] = $contribution;
             }
 
-            // Handle receipt image upload - save with receipt ID as filename
+            // Handle receipt image upload - save with contribution ID as filename
             if ($request->hasFile('receipt_image')) {
                 $image = $request->file('receipt_image');
                 $extension = $image->getClientOriginalExtension();
@@ -374,8 +374,7 @@ class ParentContributionController extends Controller
                 $firstContribution = $contributions[0];
                 $filename = $firstContribution->contributionID . '.' . $extension;
 
-                // Move the image to public/images/receipt_img
-                $image->move(public_path('images/receipt_img'), $filename);
+                $image->storeAs('receipt_img', $filename, 'public');
             }
 
             DB::commit();

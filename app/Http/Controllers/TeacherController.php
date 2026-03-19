@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\ParentProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -94,17 +95,34 @@ class TeacherController extends Controller
             $counter++;
         }
 
-        User::create([
-            'username' => $username,
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'user_type' => $request->role,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'password_hash' => Hash::make($request->password),
-            'plain_password' => $request->password,
-            'is_active' => true,
-        ]);
+        DB::transaction(function () use ($request, $username) {
+            $user = User::create([
+                'username' => $username,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'user_type' => $request->role,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'password_hash' => Hash::make($request->password),
+                'plain_password' => $request->password,
+                'is_active' => true,
+            ]);
+
+            if ($user->user_type === 'parent') {
+                ParentProfile::updateOrCreate(
+                    ['email' => $user->email],
+                    [
+                        'userID' => $user->userID,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'password_hash' => $user->password_hash,
+                        'account_status' => 'active',
+                    ]
+                );
+            }
+        });
 
         return redirect()->route('teacher.create-account')->with('success', 'Account created successfully! Username: ' . $username);
     }
@@ -521,8 +539,7 @@ class TeacherController extends Controller
                 $firstContribution = $contributions[0];
                 $filename = $firstContribution->contributionID . '.' . $extension;
 
-                // Move the image to public/images/receipt_img
-                $image->move(public_path('images/receipt_img'), $filename);
+                $image->storeAs('receipt_img', $filename, 'public');
             }
 
             DB::commit();
